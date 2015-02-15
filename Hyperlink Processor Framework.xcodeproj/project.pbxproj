@@ -9,12 +9,12 @@
 /* Begin PBXBuildFile section */
 		4C6F8E0A1A901C6D000F49FD /* COPYRIGHT in Resources */ = {isa = PBXBuildFile; fileRef = 4C6F8E081A901C6D000F49FD /* COPYRIGHT */; };
 		4C6F8E0B1A901C6D000F49FD /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 4C6F8E091A901C6D000F49FD /* LICENSE */; };
-		4C6F8E191A901D0B000F49FD /* AHHyperlinkScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E131A901D0B000F49FD /* AHHyperlinkScanner.h */; };
+		4C6F8E191A901D0B000F49FD /* AHHyperlinkScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E131A901D0B000F49FD /* AHHyperlinkScanner.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C6F8E1A1A901D0B000F49FD /* AHHyperlinkScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F8E141A901D0B000F49FD /* AHHyperlinkScanner.m */; };
-		4C6F8E1B1A901D0B000F49FD /* AHLinkLexer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E151A901D0B000F49FD /* AHLinkLexer.h */; };
+		4C6F8E1B1A901D0B000F49FD /* AHLinkLexer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E151A901D0B000F49FD /* AHLinkLexer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C6F8E1C1A901D0B000F49FD /* AHLinkLexer.l in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F8E161A901D0B000F49FD /* AHLinkLexer.l */; };
 		4C6F8E1D1A901D0B000F49FD /* AutoHyperlinks.framework_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E171A901D0B000F49FD /* AutoHyperlinks.framework_Prefix.pch */; };
-		4C6F8E1E1A901D0B000F49FD /* AutoHyperlinks.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E181A901D0B000F49FD /* AutoHyperlinks.h */; };
+		4C6F8E1E1A901D0B000F49FD /* AutoHyperlinks.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E181A901D0B000F49FD /* AutoHyperlinks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
