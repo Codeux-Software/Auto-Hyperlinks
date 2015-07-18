@@ -179,7 +179,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 0620;
+				LastUpgradeCheck = 0700;
 			};
 			buildConfigurationList = DA8A8087085549EE00F24BB3 /* Build configuration list for PBXProject "Hyperlink Processor Framework" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -230,6 +230,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adiumX.AutoHyperlinks;
 			};
 			name = Release;
 		};
