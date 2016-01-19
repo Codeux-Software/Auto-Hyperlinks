@@ -314,7 +314,7 @@ static NSArray					*encKeys						= nil;
 	if (parserStatus == AHParserValidURLWithDegeneratedSchemeStatus) {
 		properURL = [DEFAULT_URL_SCHEME stringByAppendingString:url];
 	} else if (parserStatus == AHParserValidURLWithSpecialSchemeForRedditStatus) {
-		properURL = [@"http://www.reddit.com" stringByAppendingString:url];
+		properURL = [@"https://www.reddit.com" stringByAppendingString:url];
 	}
 
 	return properURL;
