@@ -179,10 +179,21 @@ static NSArray					*encKeys						= nil;
 		*sIndex += AHget_leng(scanner);
 	}
 
-	if ((validStatus == AHParserValidURLWithNormalSchemeStatus ||
-	  	 validStatus == AHParserValidURLWithSlashlessSchemeStatus ||
-		(validStatus == AHParserValidURLWithSpecialSchemeForRedditStatus && useStrictChecking == NO) ||
-		(validStatus == AHParserValidURLWithDegeneratedSchemeStatus && useStrictChecking == NO)))
+	if (validStatus == AHParserURLWithRecognizedSchemeStatus) {
+		NSRange schemeColonRange = [inString rangeOfString:@":"];
+
+		if (schemeColonRange.location != NSNotFound) {
+			NSString *urlScheme = [inString substringToIndex:schemeColonRange.location];
+
+			if ([AHHyperlinkScanner isPermittedScheme:urlScheme] == NO) {
+				validStatus = AHParserInvalidURLStatus;
+			}
+		}
+	}
+
+	if ((validStatus == AHParserURLWithRecognizedSchemeStatus ||
+		(validStatus == AHParserURLWithoutSchemeStatus && useStrictChecking == NO) ||
+		(validStatus == AHParserURLIsSpecialCaseStatus_Reddit && useStrictChecking == NO)))
 	{
         AH_delete_buffer(buf, scanner); 
 		
@@ -206,7 +217,30 @@ static NSArray					*encKeys						= nil;
 	AHlex_destroy(scanner);
 
 	return AHParserInvalidURLStatus;
-}	
+}
+
++ (BOOL)isPermittedScheme:(NSString *)urlScheme
+{
+	if ([urlScheme isEqualToString:@"http"] ||
+		[urlScheme isEqualToString:@"https"])
+	{
+		return YES;
+	}
+
+	id permittedSchemesAny = [[NSUserDefaults standardUserDefaults] objectForKey:@"com.adiumX.AutoHyperlinks.permittedSchemesAny"];
+
+	if (permittedSchemesAny && [permittedSchemesAny boolValue] == YES) {
+		return YES;
+	}
+
+	NSArray *permittedSchemes = [[NSUserDefaults standardUserDefaults] arrayForKey:@"com.adiumX.AutoHyperlinks.permittedSchemes"];
+
+	if (permittedSchemes && [permittedSchemes containsObject:urlScheme]) {
+		return YES;
+	}
+
+	return NO;
+}
 
 - (NSArray *)nextURI
 {
@@ -311,9 +345,9 @@ static NSArray					*encKeys						= nil;
 {
 	NSString *properURL = url;
 
-	if (parserStatus == AHParserValidURLWithDegeneratedSchemeStatus) {
+	if (parserStatus == AHParserURLWithoutSchemeStatus) {
 		properURL = [DEFAULT_URL_SCHEME stringByAppendingString:url];
-	} else if (parserStatus == AHParserValidURLWithSpecialSchemeForRedditStatus) {
+	} else if (parserStatus == AHParserURLIsSpecialCaseStatus_Reddit) {
 		properURL = [@"https://www.reddit.com" stringByAppendingString:url];
 	}
 

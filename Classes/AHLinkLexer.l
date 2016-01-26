@@ -81,16 +81,16 @@ ignoreable      (b\.sc|m\.in)
 
 <CANONICAL>({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL} { yyleng += yyextra;
                                                            BEGIN INITIAL;
-                                                           return AHParserValidURLWithNormalSchemeStatus; }
+                                                           return AHParserURLWithRecognizedSchemeStatus; }
 
 <CANONICAL>.*                                            { BEGIN INITIAL;
                                                            return AHParserInvalidURLStatus; }
 
 {ignoreable}            { return AHParserInvalidURLStatus; }
 
-{urlSpec}               { return AHParserValidURLWithDegeneratedSchemeStatus; }
+{urlSpec}               { return AHParserURLWithoutSchemeStatus; }
 
-{redditSpec}			{ return AHParserValidURLWithSpecialSchemeForRedditStatus; }
+{redditSpec}			{ return AHParserURLIsSpecialCaseStatus_Reddit; }
 
 {myimSpec}              |
 {jabberSpec}            |
@@ -103,7 +103,7 @@ ignoreable      (b\.sc|m\.in)
 {dictSpec}				|
 {magnetSpec}			|
 {messageSpec}			|
-{spotifySpec}           { return AHParserValidURLWithSlashlessSchemeStatus; }
+{spotifySpec}           { return AHParserURLWithRecognizedSchemeStatus; }
 
 {urlScheme}:\/\/\/?     { yyextra = yyleng; BEGIN CANONICAL; }
 

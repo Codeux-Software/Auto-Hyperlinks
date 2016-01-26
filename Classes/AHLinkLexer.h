@@ -27,10 +27,9 @@
 
 typedef enum {
 	AHParserInvalidURLStatus,
-	AHParserValidURLWithNormalSchemeStatus,
-	AHParserValidURLWithSlashlessSchemeStatus,
-	AHParserValidURLWithDegeneratedSchemeStatus,
-	AHParserValidURLWithSpecialSchemeForRedditStatus,
+	AHParserURLWithRecognizedSchemeStatus,
+	AHParserURLWithoutSchemeStatus,
+	AHParserURLIsSpecialCaseStatus_Reddit,
 } AHParserStatus;
 
 #define YY_EXTRA_TYPE unsigned long
