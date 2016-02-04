@@ -81,7 +81,7 @@ ignoreable      (b\.sc|m\.in)
 
 <CANONICAL>({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL} { yyleng += yyextra;
                                                            BEGIN INITIAL;
-                                                           return AHParserURLWithRecognizedSchemeStatus; }
+                                                           return AHParserURLWithWildcardSchemeStatus; }
 
 <CANONICAL>.*                                            { BEGIN INITIAL;
                                                            return AHParserInvalidURLStatus; }

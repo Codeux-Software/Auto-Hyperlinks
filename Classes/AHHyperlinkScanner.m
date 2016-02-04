@@ -179,7 +179,7 @@ static NSArray					*encKeys						= nil;
 		*sIndex += AHget_leng(scanner);
 	}
 
-	if (validStatus == AHParserURLWithRecognizedSchemeStatus) {
+	if (validStatus == AHParserURLWithWildcardSchemeStatus) {
 		NSRange schemeColonRange = [inString rangeOfString:@":"];
 
 		if (schemeColonRange.location != NSNotFound) {
