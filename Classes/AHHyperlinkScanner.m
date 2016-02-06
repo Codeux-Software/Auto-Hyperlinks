@@ -192,6 +192,7 @@ static NSArray					*encKeys						= nil;
 	}
 
 	if ((validStatus == AHParserURLWithRecognizedSchemeStatus ||
+		 validStatus == AHParserURLWithWildcardSchemeStatus ||
 		(validStatus == AHParserURLWithoutSchemeStatus && useStrictChecking == NO) ||
 		(validStatus == AHParserURLIsSpecialCaseStatus_Reddit && useStrictChecking == NO)))
 	{
