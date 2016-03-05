@@ -310,7 +310,15 @@ static NSArray					*encKeys						= nil;
 				AHParserStatus _parserStatus = [AHHyperlinkScanner isStringValidURI:_scanString usingStrict:m_strictChecking fromIndex:&m_scanLocation];
 
 				if (_parserStatus != AHParserInvalidURLStatus) {
-					return [self _returnedValueWithProperURLScheme:_scanString inRange:scannedRange parserStatus:_parserStatus];
+					if (_parserStatus == AHParserURLWithoutSchemeStatus && scannedRange.location >= 1) {
+						unichar leftmost = [m_scanString characterAtIndex:(scannedRange.location - 1)];
+
+						if (leftmost != '@' && leftmost != '.') {
+							return [self _returnedValueWithProperURLScheme:_scanString inRange:scannedRange parserStatus:_parserStatus];
+						}
+					} else {
+						return [self _returnedValueWithProperURLScheme:_scanString inRange:scannedRange parserStatus:_parserStatus];
+					}
 				}
 			}
 
