@@ -153,7 +153,7 @@ static NSArray					*encKeys						= nil;
 
 + (NSString *)URLWithProperScheme:(NSString *)url
 {
-	AHParserStatus parserStatus = [AHHyperlinkScanner isStringValidURI:url usingStrict:NO fromIndex:0];
+	AHParserStatus parserStatus = [AHHyperlinkScanner isStringValidURI:url usingStrict:NO fromIndex:NULL];
 
 	if (parserStatus == AHParserInvalidURLStatus) {
 		return nil;
@@ -164,29 +164,21 @@ static NSArray					*encKeys						= nil;
 
 + (AHParserStatus)isStringValidURI:(NSString *)inString usingStrict:(BOOL)useStrictChecking fromIndex:(unsigned long *)sIndex
 {
-    AH_BUFFER_STATE		buf;
-	AHParserStatus		validStatus;
-	const char			*inStringEnc;
-    unsigned long		encodedLength;
-	yyscan_t			scanner; 
+	yyscan_t scanner;
 
-	NSStringEncoding stringEnc = NSUTF8StringEncoding;
-	
-	if ((inStringEnc = [inString cStringUsingEncoding:stringEnc]) == NO) {
+	const char *inStringEnc = [inString cStringUsingEncoding:NSUTF8StringEncoding];
+
+	if (inStringEnc == NULL) {
 		return AHParserInvalidURLStatus;
 	}
 	
-	encodedLength = strlen(inStringEnc); 
+	unsigned long inStringEncLength = strlen(inStringEnc);
     
 	AHlex_init(&scanner);
 	
-    buf = AH_scan_string(inStringEnc, scanner);
+    AH_BUFFER_STATE buffer = AH_scan_string(inStringEnc, scanner);
 	
-    validStatus = (AHParserStatus)AHlex(scanner);
-
-	if (sIndex) {
-		*sIndex += AHget_leng(scanner);
-	}
+    AHParserStatus validStatus = (AHParserStatus)AHlex(scanner);
 
 	if (validStatus == AHParserURLWithWildcardSchemeStatus) {
 		NSRange schemeColonRange = [inString rangeOfString:@":"];
@@ -205,25 +197,27 @@ static NSArray					*encKeys						= nil;
 		(validStatus == AHParserURLWithoutSchemeStatus && useStrictChecking == NO) ||
 		(validStatus == AHParserURLIsSpecialCaseStatus_Reddit && useStrictChecking == NO)))
 	{
-        AH_delete_buffer(buf, scanner); 
+        AH_delete_buffer(buffer, scanner);
 		
-        buf = NULL;
+        buffer = NULL;
         
-        if (AHget_leng(scanner) == encodedLength) {
+		if (AHget_leng(scanner) == inStringEncLength) {
+			if ( sIndex)
+				*sIndex += [inString length];
+
 			AHlex_destroy(scanner);
 			
             return validStatus;
         }
     } else {
-        AH_delete_buffer(buf, scanner);
+        AH_delete_buffer(buffer, scanner);
 		
-        buf = NULL;
-		
-		AHlex_destroy(scanner);
+        buffer = NULL;
+	}
 
-		return AHParserInvalidURLStatus;
-    }
-	
+	if ( sIndex)
+		*sIndex += AHget_leng(scanner);
+
 	AHlex_destroy(scanner);
 
 	return AHParserInvalidURLStatus;
