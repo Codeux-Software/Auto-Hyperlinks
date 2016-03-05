@@ -39,8 +39,11 @@ extern YY_EXTRA_TYPE			AHget_extra(yyscan_t scanner);
 extern AH_BUFFER_STATE			AH_scan_string(const char *, yyscan_t scanner);
 
 #define DEFAULT_URL_SCHEME	@"http://"
+
 #define ENC_INDEX_KEY		@"encIndex"
 #define ENC_CHAR_KEY		@"encChar"
+
+#define MIN_LINK_LENGTH 4
 
 @interface AHHyperlinkScanner (Private)
 - (NSArray *)_allMatches;
@@ -59,6 +62,8 @@ extern AH_BUFFER_STATE			AH_scan_string(const char *, yyscan_t scanner);
 	
 	unsigned long		m_scanLocation;
 	unsigned long		m_scanStringLength;
+
+	NSMutableArray     *m_openEnclosureStack;
 }
 
 static NSCharacterSet			*skipSet						= nil;
@@ -92,15 +97,15 @@ static NSArray					*encKeys						= nil;
 		[mutableSkipSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
 		
 		[mutableStartSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
-		[mutableStartSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:[NSString stringWithFormat:@"\"'.,:;<?!-@%C%C", 0x2014, 0x2013]]];
+		[mutableStartSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’.…,:;<?!-–—@"]];
 		
 		[mutablePuncSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
-		[mutablePuncSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'.,:;<?!@"]];
+		[mutablePuncSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’.…,:;–—<?!"]];
 		
 		skipSet = [NSCharacterSet characterSetWithBitmapRepresentation:[mutableSkipSet bitmapRepresentation]];
 		startSet = [NSCharacterSet characterSetWithBitmapRepresentation:[mutableStartSet bitmapRepresentation]];
 		puncSet = [NSCharacterSet characterSetWithBitmapRepresentation:[mutablePuncSet bitmapRepresentation]];
-		endSet = [NSCharacterSet characterSetWithCharactersInString:@"\"',:;>)]}.?!@"];
+		endSet = [NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’,:;>)]}–—.…?!@"];
 
 		hostnameComponentSeparatorSet = [NSCharacterSet characterSetWithCharactersInString:@"./"];
 
@@ -123,7 +128,9 @@ static NSArray					*encKeys						= nil;
 
 	m_scanString = inString;
 	m_scanStringLength = [m_scanString length];
-	
+
+	m_openEnclosureStack = [NSMutableArray new];
+
 	return [self _allMatches];
 }
 
@@ -133,6 +140,8 @@ static NSArray					*encKeys						= nil;
 
 	m_scanString = inString;
 	m_scanStringLength = [m_scanString length];
+
+	m_openEnclosureStack = [NSMutableArray new];
 	
 	return [self _allMatches];
 }
@@ -253,85 +262,74 @@ static NSArray					*encKeys						= nil;
 	
 	while ([self _scanString:m_scanString upToCharactersFromSet:skipSet intoRange:&scannedRange fromIndex:&scannedLocation])
 	{
-		BOOL foundUnpairedEnclosureCharacter = NO;
-		
-		if ([enclosureSet characterIsMember:[m_scanString characterAtIndex:scannedRange.location]])
-		{
-			unsigned long encIdx = [enclosureStartArray indexOfObject:[m_scanString substringWithRange:NSMakeRange(scannedRange.location, 1)]];
-			
-			if (encIdx == NSNotFound) {
-				;
-			} else {
-				NSRange encRange = [m_scanString rangeOfString:enclosureStopArray[encIdx] options:NSBackwardsSearch range:scannedRange];
-				
-				scannedRange.location++; 
-				
-				if (encRange.location == NSNotFound) {
-					foundUnpairedEnclosureCharacter = YES;
-					
-					scannedRange.length -= 1;
+		if (MIN_LINK_LENGTH < scannedRange.length) {
+			NSString *topEncChar = [m_openEnclosureStack lastObject];
+
+			if (topEncChar || [enclosureSet characterIsMember:[m_scanString characterAtIndex:scannedRange.location]]) {
+				unsigned long encIdx = 0;
+
+				if (topEncChar) {
+					encIdx = [enclosureStartArray indexOfObject:topEncChar];
 				} else {
-					scannedRange.length -= 2;
+					encIdx = [enclosureStartArray indexOfObject:[m_scanString substringWithRange:NSMakeRange(scannedRange.location, 1)]];
+				}
+
+				NSRange encRange;
+
+				if (encIdx != NSNotFound) {
+					encRange = [m_scanString rangeOfString:[enclosureStopArray objectAtIndex:encIdx] options:NSBackwardsSearch range:scannedRange];
+
+					if (encRange.location != NSNotFound) {
+						scannedRange.length--;
+
+						if (topEncChar) {
+							[m_openEnclosureStack removeLastObject];
+						} else {
+							scannedRange.location++;
+							scannedRange.length--;
+						}
+					} else {
+						[m_openEnclosureStack addObject:[enclosureStartArray objectAtIndex:encIdx]];
+					}
 				}
 			}
-		}	
-		
-		if (scannedRange.length <= 0) {
-			m_scanLocation++;
-			
-			continue;
-		}
-		
-		NSRange longestEnclosure = [self _longestBalancedEnclosureInRange:scannedRange];
-		
-		while (scannedRange.length >= 3 && [endSet characterIsMember:[m_scanString characterAtIndex:(scannedRange.location + scannedRange.length - 1)]])
-		{
-			NSInteger longestEnclosureIndex = (longestEnclosure.location + longestEnclosure.length);
-			
-			if (longestEnclosureIndex < scannedRange.length) {
-				scannedRange.length -= 1;
-				
-				foundUnpairedEnclosureCharacter = NO;
-			} else {
+
+			if (scannedRange.length == 0) {
 				break;
 			}
-		}
-		
-		if (scannedRange.length >= 4)
-		{
-			NSString *_scanString = [m_scanString substringWithRange:scannedRange];
 
-			AHParserStatus _parserStatus = [AHHyperlinkScanner isStringValidURI:_scanString usingStrict:m_strictChecking fromIndex:&m_scanLocation];
+			NSRange longestEnclosure = [self _longestBalancedEnclosureInRange:scannedRange];
 
-			if (_parserStatus != AHParserInvalidURLStatus) {
-				if (scannedRange.location >= 1) {
-					unichar leftmost = [m_scanString characterAtIndex:(scannedRange.location - 1)];
-					
-					if (leftmost != '@' && leftmost != '.') {
-						return [self _returnedValueWithProperURLScheme:_scanString inRange:scannedRange parserStatus:_parserStatus];
-					}
+			while (scannedRange.length > 2 && [endSet characterIsMember:[m_scanString characterAtIndex:(scannedRange.location + scannedRange.length - 1)]]) {
+				if ((longestEnclosure.location + longestEnclosure.length) < scannedRange.length) {
+					scannedRange.length--;
 				} else {
+					break;
+				}
+			}
+
+			m_scanLocation = scannedRange.location;
+
+			if (MIN_LINK_LENGTH < scannedRange.length) {
+				NSString *_scanString = [m_scanString substringWithRange:scannedRange];
+
+				AHParserStatus _parserStatus = [AHHyperlinkScanner isStringValidURI:_scanString usingStrict:m_strictChecking fromIndex:&m_scanLocation];
+
+				if (_parserStatus != AHParserInvalidURLStatus) {
 					return [self _returnedValueWithProperURLScheme:_scanString inRange:scannedRange parserStatus:_parserStatus];
 				}
 			}
-		}
-		
-		NSRange startRange = [m_scanString rangeOfCharacterFromSet:puncSet options:NSLiteralSearch range:scannedRange];
-		
-		if (startRange.location == NSNotFound)
-		{
-			if (foundUnpairedEnclosureCharacter) {
-				m_scanLocation++;
+
+			NSRange startRange = [m_scanString rangeOfCharacterFromSet:puncSet options:NSLiteralSearch range:scannedRange];
+
+			if (startRange.location != NSNotFound) {
+				m_scanLocation = (startRange.location + startRange.length);
 			} else {
 				m_scanLocation += scannedRange.length;
 			}
+
+			scannedLocation = m_scanLocation;
 		}
-		else
-		{
-			m_scanLocation = (startRange.location + startRange.length);
-		}
-		
-		scannedLocation = m_scanLocation;
 	}
 	
 	m_scanLocation = m_scanStringLength;
@@ -432,10 +430,8 @@ static NSArray					*encKeys						= nil;
 						enclosureArray = [NSMutableArray array];
 					}
 					
-					if ([enclosureStack containsObject:encDict]) {
-						[enclosureStack removeObject:encDict];
-					}
-					
+					[enclosureStack removeObject:encDict];
+
 					[enclosureArray addObject:NSStringFromRange(encRange)];
 					
 					break;

@@ -37,13 +37,14 @@ uTLD            (aero|coop|museum|mobi|cat|jobs|travel)
 
 TLDs            ({ccTLD}|{sTLD}|{uTLD}|arpa|local)
 
-userAndPass     [^:@]+(:[^:@]+)?
+userAndPass     [^:@[:space:]]+(:[^:@[:space:]]+)?
 singleDomain    [_[:alnum:]\x80-\xf4-]+
 
 urlScheme		([a-z]{1})([a-z0-9\-\+\.]+)?
 urlPath         \/[^[:space:]]*
-urlSpec         ({singleDomain}\.)+{TLDs}(:[0-9]+)?{urlPath}?
-urlCSpec        {singleDomain}(\.{singleDomain})*(:[0-9]+)?{urlPath}?
+urlQuery        \?.*
+urlSpec         ({singleDomain}\.)+{TLDs}(:[0-9]+)?({urlPath}|{urlQuery})?
+urlCSpec        {singleDomain}(\.{singleDomain})*(:[0-9]+)?({urlPath}|{urlQuery})?
 
 ipv4address     ([0-9]{1,3}\.){3}([0-9]{1,3})
 ipURL           {ipv4address}(:[0-9]+)?{urlPath}?
