@@ -58,8 +58,6 @@ ipv6URL         \[{ipv6Address}](:[0-9]+)?{urlPath}?
 userAtDomain	[^:@\/[:space:]]+\@{singleDomain}(\.{singleDomain})*
 mailSpec        {userAtDomain}\.{TLDs}
 
-wildcardURL 	{urlScheme}:\/\/(\/)?({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL}
-
 jabberSpec      xmpp:{mailSpec}{urlPath}?(\?[[:alnum:]]+[;&][^[:space:]]*)?
 aolIMSpec       aim:goim\?screenname=[^\ \t\n&]+(&message=.+)?
 aolChatSpec     aim:gochat\?roomname=[^\ \t\n&]+
@@ -80,7 +78,15 @@ ignoreable      (b\.sc|m\.in)
 
 %option noyywrap nounput 8bit caseless never-interactive reentrant warn prefix="AH"
 
+%x CANONICAL
 %%
+
+<CANONICAL>({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL} {	yyleng += yyextra;
+															BEGIN INITIAL;
+															return AHParserURLWithWildcardSchemeStatus; }
+
+<CANONICAL>.*                                            {	BEGIN INITIAL;
+															return AHParserInvalidURLStatus; }
 
 {ignoreable}            { return AHParserInvalidURLStatus; }
 
@@ -101,7 +107,7 @@ ignoreable      (b\.sc|m\.in)
 {messageSpec}			|
 {spotifySpec}           { return AHParserURLWithRecognizedSchemeStatus; }
 
-{wildcardURL}			{ return AHParserURLWithWildcardSchemeStatus; }
+{urlScheme}:\/\/\/?     { yyextra = yyleng; BEGIN CANONICAL; }
 
 .                       { return AHParserInvalidURLStatus; }
 %%
