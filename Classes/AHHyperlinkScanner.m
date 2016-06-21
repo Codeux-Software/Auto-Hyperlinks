@@ -345,6 +345,9 @@ static NSCharacterSet *s_startCharacterSet = nil;
 		urlProper = [@"https://www.reddit.com" stringByAppendingString:url];
 	}
 
+	urlProper =
+	[urlProper stringByReplacingOccurrencesOfString:@"\"" withString:@"%22"];
+
 	return urlProper;
 }
 
