@@ -50,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 		self.range = range;
 
+		self.uniqueIdentifier = [[NSUUID UUID] UUIDString];
+
 		return self;
 	}
 

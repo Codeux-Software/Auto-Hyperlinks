@@ -29,6 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AHHyperlinkScannerResult : NSObject
 /**
+ * A unique identifier to keep track of this object
+ */
+@property (readonly, copy) NSString *uniqueIdentifier;
+
+/**
  * The URL
  *
  * The value of this string may be different than the string 
