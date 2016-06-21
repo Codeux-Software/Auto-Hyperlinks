@@ -1,5 +1,5 @@
 /*
- * The AutoHyperlinks Framework is the legal property of its developers (DEVELOPERS), 
+ * The AutoHyperlinks Framework is the legal property of its developers (DEVELOPERS),
  * whose names are listed in the copyright file included with this source distribution.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,5 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AutoHyperlinks/AHHyperlinkScanner.h>
-#include <AutoHyperlinks/AHHyperlinkScannerResult.h>
+#import "AHHyperlinkScannerResult.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface AHHyperlinkScannerResult ()
+@property (nonatomic, assign, readwrite) NSRange range;
+@property (nonatomic, copy, readwrite) NSString *stringValue;
+
+- (instancetype)initWithString:(NSString *)stringValue inRange:(NSRange)range NS_DESIGNATED_INITIALIZER;
+@end
+
+NS_ASSUME_NONNULL_END

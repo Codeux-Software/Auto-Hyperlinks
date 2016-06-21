@@ -25,16 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-@interface AHHyperlinkScanner : NSObject
-@property (weak, nonatomic, readonly) NSString *scanString;
-@property (nonatomic, readonly) BOOL strictChecking;
-@property (nonatomic, readonly) unsigned long scanLocation;
-@property (nonatomic, readonly) unsigned long scanStringLength;
+NS_ASSUME_NONNULL_BEGIN
 
+@class AHHyperlinkScannerResult;
+
+@interface AHHyperlinkScanner : NSObject
 + (AHHyperlinkScanner *)linkScanner;
 
-- (NSArray *)matchesForString:(NSString *)inString;
-- (NSArray *)strictMatchesForString:(NSString *)inString;
+- (NSArray<AHHyperlinkScannerResult *> *)matchesForString:(NSString *)inString;
+- (NSArray<AHHyperlinkScannerResult *> *)strictMatchesForString:(NSString *)inString;
 
-+ (NSString *)URLWithProperScheme:(NSString *)url;
++ (nullable NSString *)URLWithProperScheme:(NSString *)url;
 @end
+
+NS_ASSUME_NONNULL_END

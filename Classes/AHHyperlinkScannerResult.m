@@ -1,5 +1,5 @@
 /*
- * The AutoHyperlinks Framework is the legal property of its developers (DEVELOPERS), 
+ * The AutoHyperlinks Framework is the legal property of its developers (DEVELOPERS),
  * whose names are listed in the copyright file included with this source distribution.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,5 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AutoHyperlinks/AHHyperlinkScanner.h>
-#include <AutoHyperlinks/AHHyperlinkScannerResult.h>
+#import "AHHyperlinkScannerResultPrivate.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@implementation AHHyperlinkScannerResult
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-designated-initializers"
+- (instancetype)init
+{
+	[self doesNotRecognizeSelector:_cmd];
+
+	return nil;
+}
+#pragma clang diagnostic pop
+
+- (instancetype)initWithString:(NSString *)stringValue inRange:(NSRange)range
+{
+	NSParameterAssert(stringValue != nil);
+
+	if ((self = [super init])) {
+		self.stringValue = stringValue;
+
+		self.range = range;
+
+		return self;
+	}
+
+	return nil;
+}
+
+@end
+
+NS_ASSUME_NONNULL_END

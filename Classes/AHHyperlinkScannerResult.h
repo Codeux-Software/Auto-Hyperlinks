@@ -1,5 +1,5 @@
 /*
- * The AutoHyperlinks Framework is the legal property of its developers (DEVELOPERS), 
+ * The AutoHyperlinks Framework is the legal property of its developers (DEVELOPERS),
  * whose names are listed in the copyright file included with this source distribution.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,5 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AutoHyperlinks/AHHyperlinkScanner.h>
-#include <AutoHyperlinks/AHHyperlinkScannerResult.h>
+NS_ASSUME_NONNULL_BEGIN
+
+@interface AHHyperlinkScannerResult : NSObject
+/**
+ * The URL
+ *
+ * The value of this string may be different than the string 
+ * present at -range. That's because this value includes the
+ * scheme (if missing) or other replacements in order to make
+ * it a properly formatted URL.
+ */
+@property (readonly, copy) NSString *stringValue;
+
+/**
+ * The range of the result in input
+ */
+@property (readonly) NSRange range;
+@end
+
+NS_ASSUME_NONNULL_END
