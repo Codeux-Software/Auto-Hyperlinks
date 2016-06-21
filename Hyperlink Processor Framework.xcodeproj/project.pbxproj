@@ -13,7 +13,7 @@
 		4C6F8E1C1A901D0B000F49FD /* AHLinkLexer.l in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F8E161A901D0B000F49FD /* AHLinkLexer.l */; };
 		4C6F8E1D1A901D0B000F49FD /* AutoHyperlinks.framework_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E171A901D0B000F49FD /* AutoHyperlinks.framework_Prefix.pch */; };
 		4C6F8E1E1A901D0B000F49FD /* AutoHyperlinks.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F8E181A901D0B000F49FD /* AutoHyperlinks.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4C8025751D1935FB00347366 /* AHHyperlinkScannerResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C8025721D1935FB00347366 /* AHHyperlinkScannerResult.h */; };
+		4C8025751D1935FB00347366 /* AHHyperlinkScannerResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C8025721D1935FB00347366 /* AHHyperlinkScannerResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C8025761D1935FB00347366 /* AHHyperlinkScannerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C8025731D1935FB00347366 /* AHHyperlinkScannerResult.m */; };
 		4C8025771D1935FB00347366 /* AHHyperlinkScannerResultPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C8025741D1935FB00347366 /* AHHyperlinkScannerResultPrivate.h */; };
 		4CA41C141AC1A7F500756137 /* COPYRIGHT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4CA41C121AC1A7F500756137 /* COPYRIGHT.txt */; };
@@ -154,8 +154,8 @@
 			files = (
 				4C8025771D1935FB00347366 /* AHHyperlinkScannerResultPrivate.h in Headers */,
 				4C6F8E1E1A901D0B000F49FD /* AutoHyperlinks.h in Headers */,
-				4C6F8E191A901D0B000F49FD /* AHHyperlinkScanner.h in Headers */,
 				4C8025751D1935FB00347366 /* AHHyperlinkScannerResult.h in Headers */,
+				4C6F8E191A901D0B000F49FD /* AHHyperlinkScanner.h in Headers */,
 				4C6F8E1B1A901D0B000F49FD /* AHLinkLexer.h in Headers */,
 				4C6F8E1D1A901D0B000F49FD /* AutoHyperlinks.framework_Prefix.pch in Headers */,
 			);
