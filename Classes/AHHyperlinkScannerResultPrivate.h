@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import "AHLinkLexer.h"
+
 #import "AHHyperlinkScannerResult.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -33,8 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign, readwrite) NSRange range;
 @property (nonatomic, copy, readwrite) NSString *stringValue;
 @property (nonatomic, copy, readwrite) NSString *uniqueIdentifier;
+@property (nonatomic, assign, readwrite) BOOL strictMatch;
 
-- (instancetype)initWithString:(NSString *)stringValue inRange:(NSRange)range NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithString:(NSString *)stringValue
+					   inRange:(NSRange)range
+				   strictMatch:(BOOL)strictMatch NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

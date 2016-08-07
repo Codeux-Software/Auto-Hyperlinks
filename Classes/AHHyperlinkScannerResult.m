@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 #pragma clang diagnostic pop
 
-- (instancetype)initWithString:(NSString *)stringValue inRange:(NSRange)range
+- (instancetype)initWithString:(NSString *)stringValue inRange:(NSRange)range strictMatch:(BOOL)strictMatch
 {
 	NSParameterAssert(stringValue != nil);
 
@@ -49,6 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 		self.stringValue = stringValue;
 
 		self.range = range;
+
+		self.strictMatch = strictMatch;
 
 		self.uniqueIdentifier = [[NSUUID UUID] UUIDString];
 

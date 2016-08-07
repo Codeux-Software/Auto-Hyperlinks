@@ -356,7 +356,10 @@ static NSCharacterSet *s_startCharacterSet = nil;
 	NSString *urlProper = [AHHyperlinkScanner _URLWithProperScheme:url parserStatus:parserStatus];
 
 	  AHHyperlinkScannerResult *result =
-	[[AHHyperlinkScannerResult alloc] initWithString:urlProper inRange:range];
+	[[AHHyperlinkScannerResult alloc] initWithString:urlProper
+											 inRange:range
+										 strictMatch:(parserStatus == AHParserURLWithRecognizedSchemeStatus ||
+													  parserStatus == AHParserURLWithWildcardSchemeStatus)];
 
 	return result;
 }

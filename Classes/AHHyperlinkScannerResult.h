@@ -47,6 +47,12 @@ NS_ASSUME_NONNULL_BEGIN
  * The range of the result in input
  */
 @property (readonly) NSRange range;
+
+/** 
+ * Whether the result was a strict match. Not a partial URL.
+ * "example.com" equals NO, "http://example.com/" equals YES
+ */
+@property (readonly) BOOL strictMatch;
 @end
 
 NS_ASSUME_NONNULL_END
