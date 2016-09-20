@@ -230,6 +230,15 @@ static NSCharacterSet *s_startCharacterSet = nil;
 		return YES;
 	}
 
+	/* Two seperate arrays exist so an app can specify its own defaults in
+	 NSUserDefaults while allowing a user to whitelist additional schemes,
+	 without having to respecify the app's original. */
+	NSArray<NSString *> *permittedSchemesDefaults = [[NSUserDefaults standardUserDefaults] arrayForKey:@"com.adiumX.AutoHyperlinks.permittedSchemesDefault"];
+
+	if (permittedSchemesDefaults && [permittedSchemesDefaults containsObject:urlScheme]) {
+		return YES;
+	}
+
 	NSArray<NSString *> *permittedSchemes = [[NSUserDefaults standardUserDefaults] arrayForKey:@"com.adiumX.AutoHyperlinks.permittedSchemes"];
 
 	if (permittedSchemes && [permittedSchemes containsObject:urlScheme]) {
