@@ -125,7 +125,8 @@
 				4CA41C181AC1A80400756137 /* Build Configuration.xcconfig */,
 				4CA41C191AC1A80400756137 /* Entitlements.entitlements */,
 			);
-			path = "Build Configuration";
+			name = "Build Configuration";
+			path = "Resources/Build Configuration";
 			sourceTree = "<group>";
 		};
 		4C6F8E0C1A901C70000F49FD /* Documents */ = {
@@ -190,7 +191,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 0800;
+				LastUpgradeCheck = 0900;
 				TargetAttributes = {
 					8DC2EF4F0486A6940098B216 = {
 						ProvisioningStyle = Manual;
