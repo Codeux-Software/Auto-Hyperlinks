@@ -126,7 +126,6 @@
 				4CA41C191AC1A80400756137 /* Entitlements.entitlements */,
 			);
 			name = "Build Configuration";
-			path = "Resources/Build Configuration";
 			sourceTree = "<group>";
 		};
 		4C6F8E0C1A901C70000F49FD /* Documents */ = {
