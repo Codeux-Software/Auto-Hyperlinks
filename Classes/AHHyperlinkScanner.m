@@ -364,11 +364,11 @@ static NSCharacterSet *s_startCharacterSet = nil;
 {
 	NSString *urlProper = [[self class] _URLWithProperScheme:url parserStatus:parserStatus];
 
-	AHHyperlinkScannerResult *result =
-	[[[self class] alloc] initWithString:urlProper
-								 inRange:range
-							 strictMatch:(parserStatus == AHParserURLWithRecognizedSchemeStatus ||
-										  parserStatus == AHParserURLWithWildcardSchemeStatus)];
+	  AHHyperlinkScannerResult *result =
+	[[AHHyperlinkScannerResult alloc] initWithString:urlProper
+											 inRange:range
+										 strictMatch:(parserStatus == AHParserURLWithRecognizedSchemeStatus ||
+													  parserStatus == AHParserURLWithWildcardSchemeStatus)];
 
 	return result;
 }
