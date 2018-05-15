@@ -144,13 +144,13 @@ static NSCharacterSet *s_startCharacterSet = nil;
 
 + (nullable NSString *)URLWithProperScheme:(NSString *)url
 {
-	AHParserStatus parserStatus = [AHHyperlinkScanner isStringValidURI:url usingStrict:NO fromIndex:NULL];
+	AHParserStatus parserStatus = [self isStringValidURI:url usingStrict:NO fromIndex:NULL];
 
 	if (parserStatus == AHParserInvalidURLStatus) {
 		return nil;
 	}
 
-	return [AHHyperlinkScanner _URLWithProperScheme:url parserStatus:parserStatus];
+	return [self _URLWithProperScheme:url parserStatus:parserStatus];
 }
 
 + (AHParserStatus)isStringValidURI:(NSString *)inString usingStrict:(BOOL)useStrictChecking fromIndex:(NSUInteger *)index
@@ -177,7 +177,7 @@ static NSCharacterSet *s_startCharacterSet = nil;
 		if (schemeColonRange.location != NSNotFound) {
 			NSString *urlScheme = [inString substringToIndex:schemeColonRange.location];
 
-			if ([AHHyperlinkScanner isPermittedScheme:urlScheme] == NO) {
+			if ([self isPermittedScheme:urlScheme] == NO) {
 				validStatus = AHParserInvalidURLStatus;
 			}
 		}
@@ -309,7 +309,7 @@ static NSCharacterSet *s_startCharacterSet = nil;
 			if (MIN_LINK_LENGTH < scannedRange.length) {
 				NSString *scanString = [self->_scanString substringWithRange:scannedRange];
 
-				AHParserStatus _parserStatus = [AHHyperlinkScanner isStringValidURI:scanString usingStrict:self->_strictChecking fromIndex:&self->_scanLocation];
+				AHParserStatus _parserStatus = [[self class] isStringValidURI:scanString usingStrict:self->_strictChecking fromIndex:&self->_scanLocation];
 
 				if (_parserStatus != AHParserInvalidURLStatus) {
 					if (_parserStatus == AHParserURLWithoutSchemeStatus && scannedRange.location >= 1) {
@@ -362,13 +362,13 @@ static NSCharacterSet *s_startCharacterSet = nil;
 
 - (AHHyperlinkScannerResult *)_returnedValueWithProperURLScheme:(NSString *)url inRange:(NSRange)range parserStatus:(AHParserStatus)parserStatus
 {
-	NSString *urlProper = [AHHyperlinkScanner _URLWithProperScheme:url parserStatus:parserStatus];
+	NSString *urlProper = [[self class] _URLWithProperScheme:url parserStatus:parserStatus];
 
-	  AHHyperlinkScannerResult *result =
-	[[AHHyperlinkScannerResult alloc] initWithString:urlProper
-											 inRange:range
-										 strictMatch:(parserStatus == AHParserURLWithRecognizedSchemeStatus ||
-													  parserStatus == AHParserURLWithWildcardSchemeStatus)];
+	AHHyperlinkScannerResult *result =
+	[[[self class] alloc] initWithString:urlProper
+								 inRange:range
+							 strictMatch:(parserStatus == AHParserURLWithRecognizedSchemeStatus ||
+										  parserStatus == AHParserURLWithWildcardSchemeStatus)];
 
 	return result;
 }
