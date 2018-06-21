@@ -25,5 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __OBJC__
+@import Foundation;
+
 #include <AutoHyperlinks/AHHyperlinkScanner.h>
 #include <AutoHyperlinks/AHHyperlinkScannerResult.h>
+#endif
