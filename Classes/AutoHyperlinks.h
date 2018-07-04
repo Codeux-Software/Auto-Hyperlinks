@@ -26,7 +26,7 @@
  */
 
 #ifdef __OBJC__
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 #include <AutoHyperlinks/AHHyperlinkScanner.h>
 #include <AutoHyperlinks/AHHyperlinkScannerResult.h>
