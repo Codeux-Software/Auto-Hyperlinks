@@ -338,7 +338,7 @@ static NSCharacterSet *s_startCharacterSet = nil;
 		// Step location after scanning a string
 		NSRange startRange = [scanString rangeOfCharacterFromSet:s_punctuationCharacterSet options:NSLiteralSearch range:scanRange];
 
-		if (startRange.location == NSNotFound) {
+		if (startRange.location != NSNotFound) {
 			scanLocation = NSMaxRange(startRange);
 		} else {
 			scanLocation += scanRange.length;
