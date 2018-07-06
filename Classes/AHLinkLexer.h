@@ -26,11 +26,21 @@
  */
 
 typedef enum {
-	AHParserInvalidURLStatus,
-	AHParserURLWithRecognizedSchemeStatus,
-	AHParserURLWithWildcardSchemeStatus,
-	AHParserURLWithoutSchemeStatus,
-	AHParserURLIsSpecialCaseStatus_Reddit,
+	/* Input is not a URL */
+	AHParserURLInvalid,
+
+	/* URL is a one which is preconfigured as a match
+	 in the lexer. For example: mail:, magnet:, etc. */
+	AHParserURLPreconfigured,
+
+	/* URL that is prefixed with a scheme */
+	AHParserURLWithScheme,
+
+	/* URL that isn't prefixed with a scheme */
+	AHParserURLWithoutScheme,
+
+	/* Special cases */
+	AHParserURLSpecialCaseReddit,
 } AHParserStatus;
 
 #define YY_EXTRA_TYPE unsigned long

@@ -50,14 +50,15 @@ extern AH_BUFFER_STATE			AH_scan_string(const char *, yyscan_t scanner);
 #define ENC_INDEX_KEY		@"encIndex"
 #define ENC_CHAR_KEY		@"encChar"
 
-#define MIN_LINK_LENGTH 4
+#define MIN_URL_LENGTH 	4
 
-@interface AHHyperlinkScanner ()
+@interface AHHyperlinkScannerContext : NSObject
 @property (nonatomic, copy) NSString *scanString;
-@property (nonatomic, assign) BOOL strictChecking;
 @property (nonatomic, assign) NSUInteger scanLocation;
-@property (nonatomic, assign) NSUInteger scanStringLength;
+@property (nonatomic, assign) BOOL strictMatch;
 @property (nonatomic, strong) NSMutableArray *openEnclosureStack;
+
+- (instancetype)initWithString:(NSString *)inString strictMatching:(BOOL)strictMatch;
 @end
 
 @implementation AHHyperlinkScanner
@@ -79,18 +80,20 @@ static NSCharacterSet *s_startCharacterSet = nil;
 + (void)initialize
 {
 	if (self == [AHHyperlinkScanner class]) {
-		NSMutableCharacterSet *mutablePuncSet = [NSMutableCharacterSet new];
 		NSMutableCharacterSet *mutableSkipSet = [NSMutableCharacterSet new];
-		NSMutableCharacterSet *mutableStartSet = [NSMutableCharacterSet new];
-		
+
 		[mutableSkipSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
 		[mutableSkipSet formUnionWithCharacterSet:[NSCharacterSet illegalCharacterSet]];
 		[mutableSkipSet formUnionWithCharacterSet:[NSCharacterSet controlCharacterSet]];
 		[mutableSkipSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
-		
+
+		NSMutableCharacterSet *mutableStartSet = [NSMutableCharacterSet new];
+
 		[mutableStartSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
 		[mutableStartSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’.…,:;<?!-–—@"]];
-		
+
+		NSMutableCharacterSet *mutablePuncSet = [NSMutableCharacterSet new];
+
 		[mutablePuncSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
 		[mutablePuncSet formUnionWithCharacterSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’.…,:;–—<?!"]];
 		
@@ -109,124 +112,124 @@ static NSCharacterSet *s_startCharacterSet = nil;
 	}
 }
 
-+ (AHHyperlinkScanner *)linkScanner
+#pragma mark -
+#pragma mark Public Methods
+
+- (instancetype)init
 {
-	return [[self class] new];
+	[self doesNotRecognizeSelector:_cmd];
+
+	return nil;
 }
 
-- (NSArray<AHHyperlinkScannerResult *> *)matchesForString:(NSString *)inString
++ (NSArray<AHHyperlinkScannerResult *> *)matchesInString:(NSString *)inString
+{
+	return [self matchesInString:inString strictMatching:NO];
+}
+
++ (NSArray<AHHyperlinkScannerResult *> *)matchesInString:(NSString *)inString strictMatching:(BOOL)strictMatch
 {
 	NSParameterAssert(inString != nil);
 
-	self.strictChecking = NO;
+	AHHyperlinkScannerContext *context = [[AHHyperlinkScannerContext alloc] initWithString:inString strictMatching:strictMatch];
 
-	self.scanString = inString;
-	self.scanStringLength = inString.length;
+	NSMutableArray<AHHyperlinkScannerResult *> *results = [NSMutableArray array];
 
-	self.openEnclosureStack = [NSMutableArray array];
+	AHHyperlinkScannerResult *result = nil;
 
-	return [self _allMatches];
-}
+	while ((result = [self _nextURLInContext:context])) {
+		[results addObject:result];
+	}
 
-- (NSArray<AHHyperlinkScannerResult *> *)strictMatchesForString:(NSString *)inString
-{
-	NSParameterAssert(inString != nil);
-
-	self.strictChecking = YES;
-
-	self.scanString = inString;
-	self.scanStringLength = inString.length;
-
-	self.openEnclosureStack = [NSMutableArray array];
-
-	return [self _allMatches];
+	return [results copy];
 }
 
 + (nullable NSString *)URLWithProperScheme:(NSString *)url
 {
-	AHParserStatus parserStatus = [self isStringValidURI:url usingStrict:NO fromIndex:NULL];
+	AHParserStatus parserStatus = [self _isStringValidURL:url strictMatching:NO withIndex:NULL];
 
-	if (parserStatus == AHParserInvalidURLStatus) {
+	if (parserStatus == AHParserURLInvalid) {
 		return nil;
 	}
 
 	return [self _URLWithProperScheme:url parserStatus:parserStatus];
 }
 
-+ (AHParserStatus)isStringValidURI:(NSString *)inString usingStrict:(BOOL)useStrictChecking fromIndex:(NSUInteger *)index
-{
-	const char *inStringEnc = [inString cStringUsingEncoding:NSUTF8StringEncoding];
+#pragma mark -
+#pragma mark Private Methods
 
-	if (inStringEnc == NULL) {
-		return AHParserInvalidURLStatus;
++ (AHParserStatus)_isStringValidURL:(NSString *)scanString strictMatching:(BOOL)strictMatch withIndex:(NSUInteger * _Nullable)scanLocationIn
+{
+	const char *CScanString = [scanString cStringUsingEncoding:NSUTF8StringEncoding];
+
+	if (CScanString == NULL) {
+		return AHParserURLInvalid;
 	}
-	
-	unsigned long inStringEncLength = strlen(inStringEnc);
 
 	yyscan_t scanner;
 
 	AHlex_init(&scanner);
 	
-    AH_BUFFER_STATE buffer = AH_scan_string(inStringEnc, scanner);
+    AH_BUFFER_STATE buffer = AH_scan_string(CScanString, scanner);
 	
     AHParserStatus validStatus = (AHParserStatus)AHlex(scanner);
 
-	if (validStatus == AHParserURLWithWildcardSchemeStatus) {
-		NSRange schemeColonRange = [inString rangeOfString:@":"];
+	long scannerLength = AHget_leng(scanner);
 
-		if (schemeColonRange.location != NSNotFound) {
-			NSString *urlScheme = [inString substringToIndex:schemeColonRange.location];
+	if ( scanLocationIn) {
+		*scanLocationIn += scannerLength;
+	}
 
-			if ([self isPermittedScheme:urlScheme] == NO) {
-				validStatus = AHParserInvalidURLStatus;
-			}
+	if (scannerLength != strlen(CScanString))
+	{
+		validStatus = AHParserURLInvalid;
+	}
+	else if (validStatus == AHParserURLWithScheme)
+	{
+		if ([self _isPermittedSchemeInString:scanString] == NO) {
+			validStatus = AHParserURLInvalid;
 		}
 	}
-
-	if ((validStatus == AHParserURLWithRecognizedSchemeStatus ||
-		 validStatus == AHParserURLWithWildcardSchemeStatus ||
-		(validStatus == AHParserURLWithoutSchemeStatus && useStrictChecking == NO) ||
-		(validStatus == AHParserURLIsSpecialCaseStatus_Reddit && useStrictChecking == NO)))
+	else if (validStatus != AHParserURLPreconfigured && strictMatch)
 	{
-        AH_delete_buffer(buffer, scanner);
-		
-        buffer = NULL;
-        
-		if (AHget_leng(scanner) == inStringEncLength) {
-			if ( index) {
-				*index += inString.length;
-			}
-
-			AHlex_destroy(scanner);
-			
-            return validStatus;
-        }
-    } else {
-        AH_delete_buffer(buffer, scanner);
-		
-        buffer = NULL;
+		validStatus = AHParserURLInvalid;
 	}
 
-	if ( index) {
-		*index += AHget_leng(scanner);
-	}
+	AH_delete_buffer(buffer, scanner);
+
+	buffer = NULL;
 
 	AHlex_destroy(scanner);
 
-	return AHParserInvalidURLStatus;
+	return validStatus;
 }
 
-+ (BOOL)isPermittedScheme:(NSString *)urlScheme
++ (BOOL)_isPermittedSchemeInString:(NSString *)scanString
 {
-	if ([urlScheme isEqualToString:@"http"] ||
-		[urlScheme isEqualToString:@"https"])
+	NSRange schemeColonRange = [scanString rangeOfString:@":"];
+
+	/* While a string without a scheme is technically invalid,
+	 it is still permitted based on the logic of our parser. */
+	if (schemeColonRange.location == NSNotFound) {
+		return YES;
+	}
+
+	NSString *urlScheme = [scanString substringToIndex:schemeColonRange.location];
+
+	return [self _isPermittedScheme:urlScheme];
+}
+
++ (BOOL)_isPermittedScheme:(NSString *)scheme
+{
+	if ([scheme isEqualToString:@"http"] ||
+		[scheme isEqualToString:@"https"])
 	{
 		return YES;
 	}
 
-	id permittedSchemesAny = [[NSUserDefaults standardUserDefaults] objectForKey:@"com.adiumX.AutoHyperlinks.permittedSchemesAny"];
+	NSNumber *permittedSchemesAny = [[NSUserDefaults standardUserDefaults] objectForKey:@"com.adiumX.AutoHyperlinks.permittedSchemesAny"];
 
-	if (permittedSchemesAny && [permittedSchemesAny boolValue] == YES) {
+	if (permittedSchemesAny.boolValue) {
 		return YES;
 	}
 
@@ -235,181 +238,205 @@ static NSCharacterSet *s_startCharacterSet = nil;
 	 without having to respecify the app's original. */
 	NSArray<NSString *> *permittedSchemesDefaults = [[NSUserDefaults standardUserDefaults] arrayForKey:@"com.adiumX.AutoHyperlinks.permittedSchemesDefault"];
 
-	if (permittedSchemesDefaults && [permittedSchemesDefaults containsObject:urlScheme]) {
+	if ([permittedSchemesDefaults containsObject:scheme]) {
 		return YES;
 	}
 
 	NSArray<NSString *> *permittedSchemes = [[NSUserDefaults standardUserDefaults] arrayForKey:@"com.adiumX.AutoHyperlinks.permittedSchemes"];
 
-	if (permittedSchemes && [permittedSchemes containsObject:urlScheme]) {
+	if ([permittedSchemes containsObject:scheme]) {
 		return YES;
 	}
 
 	return NO;
 }
 
-- (nullable AHHyperlinkScannerResult *)nextURI
++ (nullable AHHyperlinkScannerResult *)_nextURLInContext:(AHHyperlinkScannerContext *)context
 {
-	NSRange	scannedRange;
-	
-	NSUInteger scannedLocation = self->_scanLocation;
-	
-	[self _scanString:self->_scanString charactersFromSet:s_startCharacterSet intoRange:nil fromIndex:&scannedLocation];
-	
-	while ([self _scanString:self->_scanString upToCharactersFromSet:s_skipCharacterSet intoRange:&scannedRange fromIndex:&scannedLocation])
+	NSParameterAssert(context != nil);
+
+	NSString *scanString = context.scanString;
+
+	NSUInteger scanLocation = context.scanLocation;
+
+	NSRange	scanRange;
+
+	// scan up to the next whitespace character so that we don't unnecessarily confuse flex
+	// otherwise we end up validating urls that look like this "http://www.adium.im/ <--cool"
+	[self _scanString:scanString charactersFromSet:s_startCharacterSet intoRange:nil withIndex:&scanLocation];
+
+	NSMutableArray *openEnclosures = context.openEnclosureStack;
+
+	// main scanning loop
+	while ([self _scanString:scanString upToCharactersFromSet:s_skipCharacterSet intoRange:&scanRange withIndex:&scanLocation])
 	{
-		if (MIN_LINK_LENGTH < scannedRange.length) {
-			NSString *topEncChar = self->_openEnclosureStack.lastObject;
+		if (scanRange.length < MIN_URL_LENGTH) {
+			continue;
+		}
 
-			if (topEncChar || [s_enclosureCharacterSet characterIsMember:[self->_scanString characterAtIndex:scannedRange.location]]) {
-				NSUInteger encIndex = 0;
+		// Check for and filter enclosures. We can't add (, [, etc. to the skipSet as they may be in a URL.
+		NSString *topEncChar = openEnclosures.lastObject;
 
-				if (topEncChar) {
-					encIndex = [s_enclosureStartArray indexOfObject:topEncChar];
-				} else {
-					encIndex = [s_enclosureStartArray indexOfObject:[self->_scanString substringWithRange:NSMakeRange(scannedRange.location, 1)]];
-				}
+		if (topEncChar || [s_enclosureCharacterSet characterIsMember:[scanString characterAtIndex:scanRange.location]]) {
+			NSUInteger encIndex = 0;
 
-				NSRange encRange;
-
-				if (encIndex != NSNotFound) {
-					encRange = [self->_scanString rangeOfString:s_enclosureStopArray[encIndex] options:NSBackwardsSearch range:scannedRange];
-
-					if (encRange.location != NSNotFound) {
-						scannedRange.length--;
-
-						if (topEncChar) {
-							[self->_openEnclosureStack removeLastObject];
-						} else {
-							scannedRange.location++;
-							scannedRange.length--;
-						}
-					} else {
-						[self->_openEnclosureStack addObject:s_enclosureStartArray[encIndex]];
-					}
-				}
+			if (topEncChar) {
+				encIndex = [s_enclosureStartArray indexOfObject:topEncChar];
+			} else {
+				encIndex = [s_enclosureStartArray indexOfObject:[scanString substringWithRange:NSMakeRange(scanRange.location, 1)]];
 			}
 
-			if (scannedRange.length == 0) {
+			NSRange encRange;
+
+			if (encIndex != NSNotFound) {
+				encRange = [scanString rangeOfString:s_enclosureStopArray[encIndex] options:NSBackwardsSearch range:scanRange];
+
+				if (encRange.location != NSNotFound) {
+					scanRange.length--;
+
+					if (topEncChar) {
+						[openEnclosures removeLastObject];
+					} else {
+						scanRange.location++;
+						scanRange.length--;
+					}
+				} else {
+					[openEnclosures addObject:s_enclosureStartArray[encIndex]];
+				} // encRange
+			} // encIndex
+		} // topEncChar
+
+		if (scanRange.length == 0) {
+			break;
+		}
+
+		// Find balanced enclosure characters
+		NSRange longestEnclosure = [self _longestBalancedEnclosureInString:scanString range:scanRange];
+
+		NSUInteger longestEnclosureMax = NSMaxRange(longestEnclosure);
+
+		while (scanRange.length > 2 && [s_endCharacterSet characterIsMember:[scanString characterAtIndex:(NSMaxRange(scanRange) - 1)]]) {
+			if (longestEnclosureMax < scanRange.length) {
+				scanRange.length--;
+			} else {
 				break;
 			}
-
-			NSRange longestEnclosure = [self _longestBalancedEnclosureInRange:scannedRange];
-
-			while (scannedRange.length > 2 && [s_endCharacterSet characterIsMember:[self->_scanString characterAtIndex:(scannedRange.location + scannedRange.length - 1)]]) {
-				if ((longestEnclosure.location + longestEnclosure.length) < scannedRange.length) {
-					scannedRange.length--;
-				} else {
-					break;
-				}
-			}
-
-			self->_scanLocation = scannedRange.location;
-
-			if (MIN_LINK_LENGTH < scannedRange.length) {
-				NSString *scanString = [self->_scanString substringWithRange:scannedRange];
-
-				AHParserStatus _parserStatus = [[self class] isStringValidURI:scanString usingStrict:self->_strictChecking fromIndex:&self->_scanLocation];
-
-				if (_parserStatus != AHParserInvalidURLStatus) {
-					if (_parserStatus == AHParserURLWithoutSchemeStatus && scannedRange.location >= 1) {
-						UniChar leftmost = [self->_scanString characterAtIndex:(scannedRange.location - 1)];
-
-						if (leftmost != '@' && leftmost != '.') {
-							return [self _returnedValueWithProperURLScheme:scanString inRange:scannedRange parserStatus:_parserStatus];
-						}
-					} else {
-						return [self _returnedValueWithProperURLScheme:scanString inRange:scannedRange parserStatus:_parserStatus];
-					}
-				}
-			}
-
-			NSRange startRange = [self->_scanString rangeOfCharacterFromSet:s_punctuationCharacterSet options:NSLiteralSearch range:scannedRange];
-
-			if (startRange.location != NSNotFound) {
-				self->_scanLocation = (startRange.location + startRange.length);
-			} else {
-				self->_scanLocation += scannedRange.length;
-			}
-
-			scannedLocation = self->_scanLocation;
 		}
+
+		// Update the scan location
+		scanLocation = scanRange.location;
+
+		// If we have a valid URL then save the scanned string, and make a AHHyperlinkScannerResult out of it.
+		AHHyperlinkScannerResult *result = [self _resultInString:scanString range:scanRange withIndex:&scanLocation strictMatching:context.strictMatch];
+
+		if (result) {
+			context.scanLocation = scanLocation;
+
+			return result;
+		}
+
+		// Step location after scanning a string
+		NSRange startRange = [scanString rangeOfCharacterFromSet:s_punctuationCharacterSet options:NSLiteralSearch range:scanRange];
+
+		if (startRange.location == NSNotFound) {
+			scanLocation = NSMaxRange(startRange);
+		} else {
+			scanLocation += scanRange.length;
+		}
+
+		context.scanLocation = scanLocation;
 	}
-	
-	self->_scanLocation = self->_scanStringLength;
-	
+
+	// Signal we are finished
 	return nil;
 }
 
-#pragma mark -
-#pragma mark Private Methods
++ (nullable AHHyperlinkScannerResult *)_resultInString:(NSString *)scanString range:(NSRange)scanRange withIndex:(NSUInteger * _Nullable)scanLocation strictMatching:(BOOL)strictMatch
+{
+	NSParameterAssert(scanString != NULL);
+
+	if (scanRange.length < MIN_URL_LENGTH) {
+		return nil;
+	}
+
+	NSString *fragment = [scanString substringWithRange:scanRange];
+
+	AHParserStatus parserStatus = [self _isStringValidURL:fragment strictMatching:strictMatch withIndex:scanLocation];
+
+	if (parserStatus == AHParserURLInvalid) {
+		return nil;
+	}
+
+	if (parserStatus == AHParserURLWithoutScheme && scanRange.location > 0) {
+		UniChar leftmost = [scanString characterAtIndex:(scanRange.location - 1)];
+
+		// I don't remember the purpose of this but don't remove it in case it might be important
+		if (leftmost == '@' || leftmost == '.') {
+			return nil;
+		}
+	}
+
+	return [self _resultWithProperURLScheme:fragment inRange:scanRange parserStatus:parserStatus];
+}
+
++ (AHHyperlinkScannerResult *)_resultWithProperURLScheme:(NSString *)url inRange:(NSRange)range parserStatus:(AHParserStatus)parserStatus
+{
+	NSParameterAssert(url != nil);
+	NSParameterAssert(parserStatus != AHParserURLInvalid);
+
+	NSString *urlProper = [self _URLWithProperScheme:url parserStatus:parserStatus];
+
+	  AHHyperlinkScannerResult *result =
+	[[AHHyperlinkScannerResult alloc] initWithString:urlProper
+											 inRange:range
+										 strictMatch:(parserStatus == AHParserURLPreconfigured ||
+													  parserStatus == AHParserURLWithScheme)];
+
+	return result;
+}
 
 + (NSString *)_URLWithProperScheme:(NSString *)url parserStatus:(AHParserStatus)parserStatus
 {
+	NSParameterAssert(url != nil);
+
 	NSString *urlProper = url;
 
-	if (parserStatus == AHParserURLWithoutSchemeStatus) {
+	if (parserStatus == AHParserURLWithoutScheme) {
 		urlProper = [DEFAULT_URL_SCHEME stringByAppendingString:url];
-	} else if (parserStatus == AHParserURLIsSpecialCaseStatus_Reddit) {
+	} else if (parserStatus == AHParserURLSpecialCaseReddit) {
 		urlProper = [@"https://www.reddit.com" stringByAppendingString:url];
 	}
 
-	urlProper =
+	 urlProper =
 	[urlProper stringByReplacingOccurrencesOfString:@"\"" withString:@"%22"];
 
 	return urlProper;
 }
 
-- (AHHyperlinkScannerResult *)_returnedValueWithProperURLScheme:(NSString *)url inRange:(NSRange)range parserStatus:(AHParserStatus)parserStatus
++ (NSRange)_longestBalancedEnclosureInString:(NSString *)scanString range:(NSRange)range
 {
-	NSString *urlProper = [[self class] _URLWithProperScheme:url parserStatus:parserStatus];
+	NSParameterAssert(scanString != nil);
 
-	  AHHyperlinkScannerResult *result =
-	[[AHHyperlinkScannerResult alloc] initWithString:urlProper
-											 inRange:range
-										 strictMatch:(parserStatus == AHParserURLWithRecognizedSchemeStatus ||
-													  parserStatus == AHParserURLWithWildcardSchemeStatus)];
-
-	return result;
-}
-
-- (NSArray<AHHyperlinkScannerResult *> *)_allMatches
-{
-    NSMutableArray<AHHyperlinkScannerResult *> *resultArray = [NSMutableArray array];
-	
-	self->_scanLocation = 0;
-    
-	while (self->_scanLocation < self->_scanStringLength) {
-		AHHyperlinkScannerResult *result = [self nextURI];
-		
-		if ( result) {
-			[resultArray addObject:result];
-		}	
-	}
-	
-	return [resultArray copy];
-}
-
-- (NSRange)_longestBalancedEnclosureInRange:(NSRange)inRange
-{
 	NSDictionary *encDict = nil;
 
 	NSMutableArray *enclosureArray = nil;
 	NSMutableArray *enclosureStack = nil;
+
+	NSUInteger encScanLocation = range.location;
+
+	NSUInteger encMaxLength = NSMaxRange(range);
+
+	NSRange result = NSMakeRange(0, 0); // A value msut be defined
 	
-	NSString *matchCharacter = nil;
-	
-	NSUInteger encScanLocation = inRange.location;
-	
-	while (encScanLocation < (inRange.length + inRange.location))
+	while (encScanLocation < encMaxLength)
 	{
-		[self _scanString:self->_scanString upToCharactersFromSet:s_enclosureCharacterSet intoRange:nil fromIndex:&encScanLocation];
+		[self _scanString:scanString upToCharactersFromSet:s_enclosureCharacterSet intoRange:nil withIndex:&encScanLocation];
 		
-		if (encScanLocation >= (inRange.location + inRange.length)) {
+		if (encScanLocation >= encMaxLength) {
 			break;
 		}
 		
-		matchCharacter = [self->_scanString substringWithRange:NSMakeRange(encScanLocation, 1)];
+		NSString *matchCharacter = [scanString substringWithRange:NSMakeRange(encScanLocation, 1)];
 		
 		if ([s_enclosureStartArray containsObject:matchCharacter])
 		{
@@ -447,63 +474,118 @@ static NSCharacterSet *s_startCharacterSet = nil;
 					[enclosureStack removeObject:encDict];
 
 					[enclosureArray addObject:[NSValue valueWithRange:encRange]];
-					
+
+					result = encRange;
+
 					break;
-				}
-			}
-		}
+				} // if
+			} // while
+		} // if
 		
-		if (encScanLocation < (inRange.length + inRange.location)) {
+		if (encScanLocation < encMaxLength) {
 			encScanLocation++;
 		}
-	}
-	
-	if (enclosureArray && enclosureArray.count > 0) {
-		id lastObject = enclosureArray.lastObject;
+	} // while
 
-		return [lastObject rangeValue];
-	}
-
-	return NSMakeRange(0, 0);
+	return result;
 }
 
-- (BOOL)_scanString:(NSString *)inString upToCharactersFromSet:(NSCharacterSet *)inCharacterSet intoRange:(NSRange *)outRangeRef fromIndex:(NSUInteger *)index
+// functional replacement for -[NSScanner scanUpToCharactersFromSet:intoString:]
++ (BOOL)_scanString:(NSString *)scanString upToCharactersFromSet:(NSCharacterSet *)characterSet intoRange:(NSRange * _Nullable)rangeRef withIndex:(NSUInteger *)indexRef
 {
-	NSUInteger _scanLength = inString.length;
+	NSParameterAssert(scanString != nil);
+	NSParameterAssert(characterSet != nil);
+	NSParameterAssert(indexRef != NULL);
 
-	if (_scanLength <= *index) {
+	NSUInteger scanLength = scanString.length;
+
+	NSUInteger indexIn = *indexRef;
+
+	if (indexIn >= scanLength) {
 		return NO;
 	}
 
-	NSRange	_outRange;
+	// Asorb s_skipCharacterSet
+	NSUInteger firstIndex;
 
-	NSUInteger _index;
-	
-	for (_index = *index; _scanLength > _index; _index++) {
-		UniChar _currentCharacter = [inString characterAtIndex:_index];
-		
-		if ([s_skipCharacterSet characterIsMember:_currentCharacter] == NO) {
+	for (firstIndex = indexIn; firstIndex < scanLength; firstIndex++) {
+		UniChar c = [scanString characterAtIndex:firstIndex];
+
+		if ([s_skipCharacterSet characterIsMember:c] == NO) {
 			break;
 		}
 	}
-	
-	for (*index = _index; _scanLength > _index; _index++) {
-		UniChar _currentCharacter = [inString characterAtIndex:_index];
-		
-		if ([s_skipCharacterSet characterIsMember:_currentCharacter] ||
-			[inCharacterSet characterIsMember:_currentCharacter])
-		{
+
+	// scanUpTo:
+	NSUInteger secondIndex;
+
+	for (secondIndex = firstIndex; secondIndex < scanLength; secondIndex++) {
+		UniChar c = [scanString characterAtIndex:secondIndex];
+
+		if ([s_skipCharacterSet characterIsMember:c] || [characterSet characterIsMember:c]) {
 			break;
 		}
 	}
-	
-	_outRange = NSMakeRange(*index, (_index - *index));
-	
-	*index = _index;
-	
-	if (_outRange.length > 0) {
-		if ( outRangeRef) {
-			*outRangeRef = _outRange;
+
+	NSRange rangeOut = NSMakeRange(firstIndex, (secondIndex - firstIndex));
+
+	*indexRef = secondIndex;
+
+	if (rangeOut.length > 0) {
+		if ( rangeRef) {
+			*rangeRef = rangeOut;
+		}
+
+		return YES;
+	}
+
+	return NO;
+}
+
+// functional replacement for -[NSScanner scanCharactersFromSet:intoString:]
++ (BOOL)_scanString:(NSString *)scanString charactersFromSet:(NSCharacterSet *)characterSet intoRange:(NSRange * _Nullable)rangeRef withIndex:(NSUInteger *)indexRef
+{
+	NSParameterAssert(scanString != nil);
+	NSParameterAssert(characterSet != nil);
+	NSParameterAssert(indexRef != NULL);
+
+	NSUInteger scanLength = scanString.length;
+
+	NSUInteger indexIn = *indexRef;
+
+	if (indexIn >= scanLength) {
+		return NO;
+	}
+
+	// Asorb s_skipCharacterSet
+	NSUInteger firstIndex;
+
+	for (firstIndex = indexIn; firstIndex < scanLength; firstIndex++) {
+		UniChar c = [scanString characterAtIndex:firstIndex];
+		
+		if ([s_skipCharacterSet characterIsMember:c] == NO) {
+			break;
+		}
+	}
+
+	// scanCharacters:
+	NSUInteger secondIndex;
+
+	for (secondIndex = firstIndex; secondIndex < scanLength; secondIndex++) {
+		UniChar c = [scanString characterAtIndex:secondIndex];
+		
+		if ([characterSet characterIsMember:c] == NO) {
+			break;
+		}
+	}
+
+	NSRange rangeOut = NSMakeRange(firstIndex, (secondIndex - firstIndex));
+
+	*indexRef = secondIndex;
+
+	if (rangeOut.length > 0) {
+		if ( rangeRef) {
+			*rangeRef = rangeOut;
 		}
 		
 		return YES;
@@ -512,47 +594,28 @@ static NSCharacterSet *s_startCharacterSet = nil;
 	return NO;
 }
 
-- (BOOL)_scanString:(NSString *)inString charactersFromSet:(NSCharacterSet *)inCharacterSet intoRange:(NSRange *)outRangeRef fromIndex:(NSUInteger *)index
+@end
+
+#pragma mark -
+#pragma mark Context Object
+
+@implementation AHHyperlinkScannerContext
+
+- (instancetype)initWithString:(NSString *)inString strictMatching:(BOOL)strictMatch
 {
-	NSUInteger _scanLength = inString.length;
+	NSParameterAssert(inString != nil);
 
-	if (_scanLength <= *index) {
-		return NO;
+	if ((self = [super init])) {
+		self.scanString = inString;
+
+		self.strictMatch = strictMatch;
+
+		self.openEnclosureStack = [NSMutableArray array];
+
+		return self;
 	}
 
-	NSRange	_outRange;
-
-	NSUInteger _index;
-	
-	for (_index = *index; _scanLength > _index; _index++) {
-		UniChar _currentCharacter = [inString characterAtIndex:_index];
-		
-		if ([s_skipCharacterSet characterIsMember:_currentCharacter] == NO) {
-			break;
-		}
-	}
-	
-	for (*index = _index; _scanLength > _index; _index++) {
-		UniChar _currentCharacter = [inString characterAtIndex:_index];
-		
-		if ([inCharacterSet characterIsMember:_currentCharacter] == NO) {
-			break;
-		}
-	}
-	
-	_outRange = NSMakeRange(*index, (_index - *index));
-	
-	*index = _index;
-	
-	if (_outRange.length > 0) {
-		if ( outRangeRef) {
-			*outRangeRef = _outRange;
-		}
-		
-		return YES;
-	}
-
-	return NO;
+	return nil;
 }
 
 @end

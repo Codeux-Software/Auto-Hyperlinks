@@ -30,10 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class AHHyperlinkScannerResult;
 
 @interface AHHyperlinkScanner : NSObject
-+ (AHHyperlinkScanner *)linkScanner;
-
-- (NSArray<AHHyperlinkScannerResult *> *)matchesForString:(NSString *)inString;
-- (NSArray<AHHyperlinkScannerResult *> *)strictMatchesForString:(NSString *)inString;
++ (NSArray<AHHyperlinkScannerResult *> *)matchesInString:(NSString *)inString; // strictMatch = NO
++ (NSArray<AHHyperlinkScannerResult *> *)matchesInString:(NSString *)inString strictMatching:(BOOL)strictMatch;
 
 + (nullable NSString *)URLWithProperScheme:(NSString *)url;
 @end

@@ -32,11 +32,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface AHHyperlinkScannerResult ()
-@property (nonatomic, assign, readwrite) NSRange range;
-@property (nonatomic, copy, readwrite) NSString *stringValue;
-@property (nonatomic, copy, readwrite) NSString *uniqueIdentifier;
-@property (nonatomic, assign, readwrite) BOOL strictMatch;
-
 - (instancetype)initWithString:(NSString *)stringValue
 					   inRange:(NSRange)range
 				   strictMatch:(BOOL)strictMatch NS_DESIGNATED_INITIALIZER;

@@ -17,7 +17,7 @@
                BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
                BuildableName = "AutoHyperlinks.framework"
                BlueprintName = "AutoHyperlinks.framework"
-               ReferencedContainer = "container:Hyperlink Processor Framework.xcodeproj">
+               ReferencedContainer = "container:Hyperlink Processor.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -48,7 +48,7 @@
             BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
             BuildableName = "AutoHyperlinks.framework"
             BlueprintName = "AutoHyperlinks.framework"
-            ReferencedContainer = "container:Hyperlink Processor Framework.xcodeproj">
+            ReferencedContainer = "container:Hyperlink Processor.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -66,7 +66,7 @@
             BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
             BuildableName = "AutoHyperlinks.framework"
             BlueprintName = "AutoHyperlinks.framework"
-            ReferencedContainer = "container:Hyperlink Processor Framework.xcodeproj">
+            ReferencedContainer = "container:Hyperlink Processor.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

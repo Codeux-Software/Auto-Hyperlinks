@@ -74,25 +74,21 @@ magnetSpec		magnet:\?xt\=urn:(bitprint|btih|ed2k|md5|sha1|tree\:tiger):([A-Fa-f0
 redditSpec		\/r\/[A-Za-z0-9][A-Za-z0-9_]{2,20}
 messageSpec		message:(\/\/)?(%3[Cc]).+(%3[Ee])
 
-ignoreable      (b\.sc|m\.in)
-
-%option noyywrap nounput 8bit caseless never-interactive reentrant warn prefix="AH"
+%option noyywrap nounput noinput 8bit caseless align never-interactive reentrant warn prefix="AH"
 
 %x CANONICAL
 %%
 
 <CANONICAL>({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL} {	yyleng += yyextra;
-															BEGIN INITIAL;
-															return AHParserURLWithWildcardSchemeStatus; }
+														 	BEGIN INITIAL;
+															return AHParserURLWithScheme; 	}
 
-<CANONICAL>.*                                            {	BEGIN INITIAL;
-															return AHParserInvalidURLStatus; }
+<CANONICAL>.*                                            { 	BEGIN INITIAL;
+															return AHParserURLInvalid; 	}
 
-{ignoreable}            { return AHParserInvalidURLStatus; }
+{urlSpec}               { return AHParserURLWithoutScheme; }
 
-{urlSpec}               { return AHParserURLWithoutSchemeStatus; }
-
-{redditSpec}			{ return AHParserURLIsSpecialCaseStatus_Reddit; }
+{redditSpec}			{ return AHParserURLSpecialCaseReddit; }
 
 {myimSpec}              |
 {jabberSpec}            |
@@ -105,9 +101,9 @@ ignoreable      (b\.sc|m\.in)
 {dictSpec}				|
 {magnetSpec}			|
 {messageSpec}			|
-{spotifySpec}           { return AHParserURLWithRecognizedSchemeStatus; }
+{spotifySpec}           { return AHParserURLPreconfigured; }
 
 {urlScheme}:\/\/\/?     { yyextra = yyleng; BEGIN CANONICAL; }
 
-.                       { return AHParserInvalidURLStatus; }
+.                       { return AHParserURLInvalid; }
 %%
