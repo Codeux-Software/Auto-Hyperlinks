@@ -35,7 +35,6 @@
 		4CA41C131AC1A7F500756137 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		4CA41C161AC1A7FC00756137 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Resources/Info.plist; sourceTree = "<group>"; };
 		4CA41C181AC1A80400756137 /* Build Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Build Configuration.xcconfig"; path = "Resources/Build Configuration/Build Configuration.xcconfig"; sourceTree = SOURCE_ROOT; };
-		4CA41C191AC1A80400756137 /* Entitlements.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = Entitlements.entitlements; path = "Resources/Build Configuration/Entitlements.entitlements"; sourceTree = SOURCE_ROOT; };
 		8DC2EF5B0486A6940098B216 /* AutoHyperlinks.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AutoHyperlinks.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -123,7 +122,6 @@
 			isa = PBXGroup;
 			children = (
 				4CA41C181AC1A80400756137 /* Build Configuration.xcconfig */,
-				4CA41C191AC1A80400756137 /* Entitlements.entitlements */,
 			);
 			name = "Build Configuration";
 			sourceTree = "<group>";
