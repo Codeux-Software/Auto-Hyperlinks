@@ -42,7 +42,6 @@ extern long						AHget_leng(yyscan_t scanner);
 extern void						AHset_in(FILE *in_str, yyscan_t scanner);
 extern void						AH_switch_to_buffer(AH_BUFFER_STATE, yyscan_t scanner);
 extern void						AH_delete_buffer(AH_BUFFER_STATE, yyscan_t scanner);
-extern YY_EXTRA_TYPE			AHget_extra(yyscan_t scanner);
 extern AH_BUFFER_STATE			AH_scan_string(const char *, yyscan_t scanner);
 
 #define DEFAULT_URL_SCHEME	@"http://"
