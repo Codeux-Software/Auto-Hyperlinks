@@ -179,7 +179,7 @@ static NSCharacterSet *s_startCharacterSet = nil;
 		*scanLocationIn += scannerLength;
 	}
 
-	if (scannerLength != strlen(CScanString))
+	if (validStatus != AHParserURLInvalid && scannerLength != strlen(CScanString))
 	{
 		validStatus = AHParserURLInvalid;
 	}

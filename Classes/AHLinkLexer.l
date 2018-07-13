@@ -71,7 +71,7 @@ myimSpec        myim:(addContact|sendIM)\?(((uID|cID)=[0-9]*&?)|(auto=(true|fals
 msnSpec         msnim:(chat|add|voice|video)\?contact={mailSpec}
 dictSpec		dict:{urlPath}
 magnetSpec		magnet:\?xt\=urn:(bitprint|btih|ed2k|md5|sha1|tree\:tiger):([A-Fa-f0-9]{20,80})[^[:space:]]*
-redditSpec		\/r\/[A-Za-z0-9][A-Za-z0-9_]{2,20}
+redditSpec		\/r\/([A-Za-z0-9])([A-Za-z0-9_]{2,20})
 messageSpec		message:(\/\/)?(%3[Cc]).+(%3[Ee])
 
 %option noyywrap nounput noinput 8bit caseless align never-interactive reentrant warn prefix="AH"
