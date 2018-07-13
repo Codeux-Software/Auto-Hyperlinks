@@ -42,3 +42,5 @@ typedef enum {
 	/* Special cases */
 	AHParserURLSpecialCaseReddit,
 } AHParserStatus;
+
+#define YY_EXTRA_TYPE unsigned long

@@ -79,7 +79,8 @@ messageSpec		message:(\/\/)?(%3[Cc]).+(%3[Ee])
 %x CANONICAL
 %%
 
-<CANONICAL>({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL} {	BEGIN INITIAL;
+<CANONICAL>({userAndPass}@)?{urlCSpec}|{ipURL}|{ipv6URL} {	yyleng += yyextra;
+														 	BEGIN INITIAL;
 															return AHParserURLWithScheme; 	}
 
 <CANONICAL>.*                                            { 	BEGIN INITIAL;
@@ -102,7 +103,7 @@ messageSpec		message:(\/\/)?(%3[Cc]).+(%3[Ee])
 {messageSpec}			|
 {spotifySpec}           { return AHParserURLPreconfigured; }
 
-{urlScheme}:\/\/\/?     { BEGIN CANONICAL; }
+{urlScheme}:\/\/\/?     { yyextra = yyleng; BEGIN CANONICAL; }
 
 .                       { return AHParserURLInvalid; }
 %%
