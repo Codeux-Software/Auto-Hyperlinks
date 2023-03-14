@@ -206,7 +206,7 @@ static NSCharacterSet *s_startCharacterSet = nil;
 
 + (BOOL)_isPermittedSchemeInString:(NSString *)scanString
 {
-	NSRange schemeColonRange = [scanString rangeOfString:@":"];
+	NSRange schemeColonRange = [scanString rangeOfString:@":" options:NSLiteralSearch];
 
 	/* While a string without a scheme is technically invalid,
 	 it is still permitted based on the logic of our parser. */
